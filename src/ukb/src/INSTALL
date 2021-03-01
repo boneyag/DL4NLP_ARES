@@ -1,0 +1,70 @@
+
+ukb needs boost version 1.48 or higher to compile. Specifically, UKB needs the
+following Boost libraries:
+
+      * boost graph library
+      * boost program options 
+      * boost filesystem
+      * boost tokenizer
+      * boost lexical cast
+      * boost numeric conversions
+      * boost asio
+      * boost random
+
+* Compiling boost
+
+If you have a linux distribution, just install the packages for boost
+development. However, if you want to compile the boost libraries yourself, there
+are some steps you can follow. This would install boost version 1.54. The files
+will be installed into the /usr/local directory:
+
+$ mkdir /tmp/boost_src
+$ cd /tmp/boost_src
+$ wget http://downloads.sourceforge.net/project/boost/boost/1.54.0/boost_1_54_0.tar.bz2
+$ tar xjf boost_1_54_0.tar.bz2
+$ cd boost_1_54_0
+$ ./bootstrap.sh --with-libraries=graph,system,filesystem,program_options,regex,random
+$ sudo ./b2 install --layout=system
+$ sudo ldconfig
+$ cd
+$ sudo rm -fr /tmp/boost_src
+
+* Compiling UKB
+
+If you have installed boost following the reciple above, just do the following:
+
+$ cd src
+$ ./configure --with-boost-include=/usr/local/include
+$ make
+
+the ./configure script has some options (./configure --help to see them
+ all). The important options are:
+
+  --prefix
+
+  path were the executables will be installed (after 'make install')
+
+  --with-boost-include
+
+  path were the Boost include files reside (default is /usr/include)
+
+  --with-boost-lib
+
+  path were the Boost library files reside (default is /usr/lib)
+
+  --enable-static
+
+   Enable static linkage. The binary files that come with the ukb
+   distribution are compiled using this directive. Note that, if static
+   linking is enabled, ukb server can not be compiled (you have to run make
+   with the "UKB_NO_SERVER=1" parameter.
+
+After ./configure, just do a typical 'make'. 
+
+% make
+
+If you want UKB to be compiled without server support, jun run make this
+way:
+
+% make "UKB_NO_SERVER=1"
+
