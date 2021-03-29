@@ -3,10 +3,10 @@ from nltk.corpus import wordnet as wn
 
 def wordnet_trial():
     
-    for ss in wn.synsets('spring'):
+    for ss in wn.synsets('man'):
         print(ss, ss.definition())
         print(ss.lemmas())
-        print(ss.examples())
+        # print(ss.examples())
 
 def wsd_with_lesk():
 

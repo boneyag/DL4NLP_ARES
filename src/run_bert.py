@@ -18,13 +18,13 @@ def read_data():
     return df
 
 def load_bert():
-    model_class, tokenize_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
+    # model_class, tokenize_class, pretrained_weights = (ppb.DistilBertModel, ppb.DistilBertTokenizer, 'distilbert-base-uncased')
     
     # for bert instead of distilbert
-    # model_class, tokenize_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-base-uncased')
+    model_class, tokenize_class, pretrained_weights = (ppb.BertModel, ppb.BertTokenizer, 'bert-base-uncased')
     
     tokenizer = tokenize_class.from_pretrained(pretrained_weights)
-    model = model_class.from_pretrained(pretrained_weights)
+    model = model_class.from_pretrained(pretrained_weights, output_hidden_states=True)
 
     return model, tokenizer
 
@@ -45,7 +45,7 @@ def prepare_data(data, tokenizer):
     attention_mask = np.where(padded != 0, 1, 0)
     
     # sanity check
-    print(attention_mask.shape)
+    # print(attention_mask.shape)
     
     return padded, attention_mask
 
@@ -55,7 +55,10 @@ def get_features(padded, attention_mask, model):
     
     with torch.no_grad():
         last_hidden_states = model(input_ids, attention_mask=attention_mask)
-        
+    
+    print(len(last_hidden_states))
+    # print(last_hidden_states[0].shape) 
+      
     features = last_hidden_states[0][:, 0, :].numpy()
     
     return features
@@ -91,11 +94,11 @@ def main():
     features = get_features(padded, attention_mask, model)
     labels = batch1[1]
     
-    train_X, test_X, train_y, test_y = train_test_split(features, labels)
+    # train_X, test_X, train_y, test_y = train_test_split(features, labels)
     
-    params = grid_search_params(train_X, train_y)
+    # params = grid_search_params(train_X, train_y)
     
-    train_logistic_regression(train_X, train_y, test_X, test_y, params['C'])
+    # train_logistic_regression(train_X, train_y, test_X, test_y, params['C'])
     
     
     
