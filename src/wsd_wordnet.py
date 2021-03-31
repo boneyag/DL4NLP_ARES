@@ -1,14 +1,17 @@
 from nltk.wsd import lesk
 from nltk.corpus import wordnet as wn
+import re
 
 def wordnet_synset_from_pos_offset(pos, offset):
-    print(wn.synset_from_pos_and_offset(pos, offset))
+    # print(wn.synset_from_pos_and_offset(pos, offset))
+    return wn.synset_from_pos_and_offset(pos, offset)
     
 def wordnet_trial():
     
-    for ss in wn.synsets('glass'):
+    for ss in wn.synsets('spring'):
         print(ss, ss.definition())
         print(ss.lemmas())
+        print(ss.pos())
         # print(ss.examples())
 
 def wsd_with_lesk():
@@ -22,7 +25,30 @@ def main():
 
     # wsd_with_lesk()
     
-    wordnet_synset_from_pos_offset('n', 14881303)
-
+    # synset_dict = {}
+    
+    with open('../data/glass_ukb_output2w2w.txt') as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.split()[0] == '!!':
+                continue
+            elif re.match(r'^ctx_.+', line):
+                wordnet_synset_offset = line.split()[2]
+                offset_pos = wordnet_synset_offset.split('-')
+                offset = int(offset_pos[0])
+                pos = offset_pos[1]
+                lemma = line.split()[4]
+                # print('{}-{}'.format(offset, pos))
+                if lemma == 'glass':
+                    print('{}-{}'.format(offset, pos))
+                    print(wordnet_synset_from_pos_offset(pos, offset).definition())
+                #     synset = wordnet_synset_from_pos_offset(pos, offset)
+                #     if synset in synset_dict.keys():
+                #         synset_dict[synset] += 1
+                #     else:
+                #         synset_dict[synset] = 1
+                        
+    # print(synset_dict)
+    
 if __name__ == '__main__':
     main()

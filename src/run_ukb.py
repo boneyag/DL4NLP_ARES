@@ -12,23 +12,50 @@ eng_stopwords = stopwords.words('english')
 
 def prepare_data():
     
-    lines = []
+    cluster_bow = {}
+    
     with open('../data/sample_sentences_clusters_glass.csv', 'r') as f:
         csv_reader =csv.reader(f, delimiter=',')
         for row in csv_reader:
+            
             sent = row[0].translate(str.maketrans(' ', ' ', string.punctuation))
             tokens = sent.lower().split()
             
             tokens = [token for token in tokens if token not in eng_stopwords]
      
             lemmatized_tokens = []
-            i = 1
-            for token, pos in pos_tag(tokens):
-                lemmatized_tokens.append('{}#{}#w{}#1'.format(lemmatizer.lemmatize(token, get_wordnet_pos(pos)), get_wordnet_type(pos), i))
-                i += 1
-            lines.append(lemmatized_tokens)
             
-    print(lines)
+            for token, pos in pos_tag(tokens):
+                # lemmatized_tokens.append('{}#{}#w{}#1'.format(lemmatizer.lemmatize(token, get_wordnet_pos(pos)), get_wordnet_type(pos), i))
+                lemmatized_tokens.append(lemmatizer.lemmatize(token, get_wordnet_pos(pos)))
+                
+                
+            # create a dict entry for each cluster/class then add words
+            class_id = row[1]
+            if class_id not in cluster_bow.keys():
+                cluster_bow[class_id] = lemmatized_tokens
+            elif class_id in cluster_bow.keys():
+                cluster_bow[class_id].extend(lemmatized_tokens)
+    
+    # create a bag of word for each cluster
+    for k, v in cluster_bow.items():
+        cluster_bow[k] = list(set(v))
+        temp = []
+        i = 1
+        for word, pos in pos_tag(cluster_bow[k]):
+            temp.append('{}#{}#w{}#1'.format(word, get_wordnet_type(pos), i))
+            i += 1
+        cluster_bow[k] = temp
+        
+    # print(cluster_bow)
+    with open('../data/glass_ukb_input2.txt', 'w') as f:    
+        i = 1    
+        for key in cluster_bow.keys():
+            f.write('ctx_{}\n'.format(i))
+            for item in cluster_bow[key]:
+                f.write('%s ' % item)
+            f.write('\n')
+            i += 1
     
 def get_wordnet_pos(treebank_tag):
     if treebank_tag.startswith('J'):

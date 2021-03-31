@@ -1,0 +1,10 @@
+ctx_1
+phil#n#w1#1 decide#v#w2#1 stay#a#w3#1 little#r#w4#1 long#a#w5#1 time#n#w6#1 pass#v#w7#1 seemed#a#w8#1 stange#n#w9#1 little#a#w10#1 man#n#w11#1 never#r#w12#1 glass#n#w13#1 table#n#w14#1 
+ctx_2
+toward#n#w1#1 end#a#w2#1 fourth#a#w3#1 hairy#n#w4#1 highball#n#w5#1 make#v#w6#1 wet#a#w7#1 ring#v#w8#1 tabletop#a#w9#1 bottom#n#w10#1 glass#n#w11#1 become#v#w12#1 aware#a#w13#1 alone#r#w14#1 
+ctx_3
+haney#n#w1#1 swish#v#w2#1 liquor#a#w3#1 bottom#n#w4#1 glass#n#w5#1 
+ctx_4
+get#v#w1#1 back#r#w2#1 balinas#a#w3#1 everything#n#w4#1 fallenbroken#a#w5#1 poster#n#w6#1 frame#n#w7#1 glass#v#w8#1 floor#n#w9#1 file#n#w10#1 cabinet#n#w11#1 open#v#w12#1 dump#v#w13#1 onto#n#w14#1 floor#n#w15#1 
+ctx_5
+endless#a#w1#1 second#a#w2#1 wonder#v#w3#1 huge#a#w4#1 window#n#w5#1 would#n#w6#1 buckle#v#w7#1 shower#a#w8#1 u#n#w9#1 glass#n#w10#1 
