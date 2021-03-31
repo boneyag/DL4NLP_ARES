@@ -85,7 +85,9 @@ def get_clusters(features):
     kmeans = KMeans(init='random', n_clusters=2, n_init=features.shape[0], max_iter=300, random_state=42)
     kmeans.fit(features)
     
-    print(kmeans.labels_[:16])
+    print(kmeans.labels_[:])
+    
+    return kmeans.labels_[:]
     
 def main():
     all_data = read_data()
@@ -103,7 +105,13 @@ def main():
     
     features = get_features(padded, attention_mask, model)
     
-    get_clusters(features)
+    cluster_labels = get_clusters(features)
+    
+    data = data.assign(c=pd.Series(cluster_labels).values)
+    
+    print(data)
+    
+    data.to_csv('../data/sample_sentences_clusters_glass.csv', index=False, header=False)
     
 if __name__ == '__main__':
     main()
