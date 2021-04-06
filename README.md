@@ -29,6 +29,15 @@ ctx_2 w19  14881303-n !! glass
 ### Find the sense and description from WordNet
 Run `python3 wsd_wordnet.py` to find the sense and sense description from the sense offset. 
 
+### Using Wikipedia dump as the input corpus
+
+Download the wikipedia dump to your local machine. This is large bz file. You will get the XML file once you extract the file.
+
+Don't try to open the file because it is very large file (over 70 GB). Fortunately I found this python script that read the file and 
+split into smaller readable size files (100 MB). Follow the instructions in this [GitHub repository](https://github.com/attardi/wikiextractor) to convert the large XML file to small readable files. Those files contain content wrapped in <doc> ... </doc> tags. Since a file contain multiple docs Python libraries will only read the first doc. Therefore, we need to add root level tags that encloses all doc tags in each file.
+
+The `wiki_dump_reader.py` script provide this functionality. However, you need to change the input and output file paths accordingly before running the script.
+
 ***
 
 Individual branches contain different models that we tried out before merging them towards the main brach.
