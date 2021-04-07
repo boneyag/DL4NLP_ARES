@@ -2,10 +2,14 @@ import csv
 import string
 
 import nltk
+nltk.download('stopwords')
+from nltk.corpus import stopwords
 from nltk.corpus import wordnet
 from nltk.stem.wordnet import WordNetLemmatizer
+
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
 from nltk.tag import pos_tag
-from nltk.corpus import stopwords
 
 lemmatizer = WordNetLemmatizer()
 eng_stopwords = stopwords.words('english')
