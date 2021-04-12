@@ -48,9 +48,9 @@ def find_collacation_senses(input_sense):
     return collocated_senses        
 
 def main():
-    collocated_senses = find_collacation_senses('glass 14881303-n')
+    collocated_senses = find_collacation_senses('glass 3438257-n')
     
-    with open('../data/glass_14881303n_syntag_senses.txt', 'w') as f:
+    with open('../data/glass_3438257n_syntag_senses.txt', 'w') as f:
             f.write('\n'.join('%d %s %s' % x for x in collocated_senses))
     
 if __name__ == '__main__':
