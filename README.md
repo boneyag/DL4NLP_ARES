@@ -1,11 +1,25 @@
 # DL4NLP_ARES
-Replicate ARES (WSD model) 
+Replicate ARES (WSD model) [1]
 
 ### Directory structre
 
-`data` contains sample input corpus, input file generated according to UKB accepted format, UKB results files.
-`src` contains four scripts that are required to run the experiments according to the progress report II. 
-`src\ukb` contains script required to run UKB. The tool is compiled and ready to run. However, you should use your own platform dependent version before use. Follow the steps in [here](https://github.com/asoroa/ukb/tree/master/src) to compile your own UKB tool. 
+`data` contains sample input corpus, input file generated according to UKB accepted format, and UKB results files.
+`src` contains four scripts that are required to run the experiments. 
+`src/ukb` contains scripts required to run UKB. The tool is compiled and ready to run. You should compile the UKB before executing the scripts. Follow the steps in [here](https://github.com/asoroa/ukb/tree/master/src) to compile your own UKB tool. 
+
+### Setup Wikipedia dump as the input corpus
+1. Download a Wikipedia data dump (the authors used the 2019 July data dump). Data dumps are huge compressed files (~18GB). Therefore, downloading through [torrents](https://meta.wikimedia.org/wiki/Data_dump_torrents#English_Wikipedia) is a good option.
+2. Use the command `bzip2 -dk <filename>.xml.bz2` to extract the XML file. Don't try to open this file as it's nearly ~75GB.
+3. Use the [wikiextractor](https://github.com/attardi/wikiextractor) extract articles to readable size files. 
+    3.1. I preferred to execute the script instead of installing the wikiextractor. Use the input parameter to specify the location of the XML file and the output parameter to specify the location for output files. It should take several minutes to complete the task. Once completed, there should be a set of directories like AA, AB, ..., and in each dir, there should be files like wiki_00, wiki_01.
+    3.2. Each file contain several documents in the format of
+    ```
+    <doc id="..." ulr="..." title="...">
+     ...
+    </doc>
+    ```
+    Since there are no root level tags that enclose all <doc> tags, it is not possible to read the entire file using an XML reader in python. Therefore, we use the `add_root_tag` function to modify all files by adding the <articles> tags to each file.
+4. Since there are over 144000 files, searching for sentences takes nearly 980s. Therefore, we use [Whoosh](https://whoosh.readthedocs.io/en/latest/quickstart.html) to index documents which speed up the search to 6.3s. Run the `wiki_dump_reader.py` script to modify the files and create an index. (We decided not to upload the index as the file size is too large)
 
 ### Clustering sentences
 Change the directory to `src` and run `python3 bert_wsd.py` to create two clusters. To run this script you need to have `numpy`, `pandas`, `torch`, `transformers`, and `sklearn` packages installed in your virtual environment. You need Python 3+ as well. The script expect `sample_sentences.txt` in data directory. This can be changed to actual corpus when running the full replication in future. If the execution is successful, there will be `sample_sentences_clusters_glass.csv` in the data directory. 
@@ -53,3 +67,8 @@ Both contributor will agree before a branch merge to a production ready branch (
 Contributors:
 Akalanka Galappaththi
 Sakib Hasan
+
+* * *
+
+## References
+[1] Bianca Scarlini, Tommaso Pasini, and Roberto Navigli. 2020. With more contexts come better performance: Contextualized sense embedding for all round word sense disambiguation. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing, ENNLP 2020, On-line, November 16-20, 2020, pages 3528-3539. Association for Computational Linguistics.
