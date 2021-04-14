@@ -43,20 +43,13 @@ ctx_2 w19  14881303-n !! glass
 ### Find the sense and description from WordNet
 Run `python3 wsd_wordnet.py` to find the sense and sense description from the sense offset. 
 
-### Using Wikipedia dump as the input corpus
-
-Download the wikipedia dump to your local machine. This is large bz file. You will get the XML file once you extract the file.
-
-Don't try to open the file because it is very large file (over 70 GB). Fortunately I found this python script that read the file and 
-split into smaller readable size files (100 MB). Follow the instructions in this [GitHub repository](https://github.com/attardi/wikiextractor) to convert the large XML file to small readable files. Those files contain content wrapped in <doc> ... </doc> tags. Since a file contain multiple docs Python libraries will only read the first doc. Therefore, we need to add root level tags that encloses all doc tags in each file.
-
-The `wiki_dump_reader.py` script provide this functionality. However, you need to change the input and output file paths accordingly before running the script.
 
 ***
+### Repository contributors and branch naming conventions
 
 Individual branches contain different models that we tried out before merging them towards the main brach.
 
-Final outcome should be the ARES word sense disambiguation (WSD) model as originally presented in [EMNLP 2020](https://www.aclweb.org/anthology/2020.emnlp-main.285.pdf)
+Final outcome should be the ARES word sense disambiguation (WSD) model as originally presented in the reference paper [1].
 
 Branch naming convension: 
 `<author>-<tool>-<tag>`, for example, `ag-BERT-trial` means Akalanka's branch on using/configuring BERT for a trial run.
@@ -71,4 +64,4 @@ Sakib Hasan
 * * *
 
 ## References
-[1] Bianca Scarlini, Tommaso Pasini, and Roberto Navigli. 2020. With more contexts come better performance: Contextualized sense embedding for all round word sense disambiguation. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing, ENNLP 2020, On-line, November 16-20, 2020, pages 3528-3539. Association for Computational Linguistics.
+[1](https://www.aclweb.org/anthology/2020.emnlp-main.285.pdf) Bianca Scarlini, Tommaso Pasini, and Roberto Navigli. 2020. With more contexts come better performance: Contextualized sense embedding for all round word sense disambiguation. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing, ENNLP 2020, On-line, November 16-20, 2020, pages 3528-3539. Association for Computational Linguistics.
