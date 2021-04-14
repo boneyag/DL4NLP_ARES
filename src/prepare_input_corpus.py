@@ -1,11 +1,8 @@
 from bs4 import BeautifulSoup
 import os
 
-from whoosh.index import create_in
-from whoosh.index import open_dir
 from whoosh.filedb.filestore import FileStorage
 from whoosh.fields import *
-from whoosh.qparser import QueryParser
 
 # from time import perf_counter, process_time
 
