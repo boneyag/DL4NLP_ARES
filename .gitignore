@@ -1,7 +1,4 @@
 wsd/
-<<<<<<< HEAD
-data/wiki_dump
-=======
 data/wiki_dump
 data/wiki_index
->>>>>>> ag-wiki-dump-read
+src/__pycache__/
