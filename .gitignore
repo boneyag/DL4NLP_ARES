@@ -3,3 +3,4 @@ data/wiki_dump
 data/wiki_index
 src/__pycache__/
 .vscode
+data/clusters
