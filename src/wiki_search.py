@@ -24,7 +24,7 @@ def search_wiki_dump(lemmas):
         
     my_query = wiki_qparser.parse(u"{}".format(input))
     
-    with open('../data/all_{}.txt'.format(lemmas[0]), 'w') as f:
+    with open('../data/clusters/all_{}.txt'.format(lemmas[0]), 'w') as f:
     
         with wiki_ix.searcher() as ws:
             results = ws.search(my_query, limit=5)

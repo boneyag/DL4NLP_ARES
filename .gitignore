@@ -4,3 +4,4 @@ data/wiki_index
 src/__pycache__/
 .vscode
 data/clusters
+data/embeddings
