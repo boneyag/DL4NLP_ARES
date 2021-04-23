@@ -1,7 +1,10 @@
 from whoosh.filedb.filestore import FileStorage
 from whoosh.qparser import QueryParser
-
 from bs4 import BeautifulSoup
+import re
+from nltk.tokenize import sent_tokenize
+
+# import time
 
 def search_wiki_dump(lemmas):
     """
@@ -24,20 +27,27 @@ def search_wiki_dump(lemmas):
         
     my_query = wiki_qparser.parse(u"{}".format(input))
     
-    with open('../data/clusters/all_{}.txt'.format(lemmas[0]), 'w') as f:
+    # print(my_query)
+    # start = time.perf_counter()
+    with open('../data/clusters/{}_all.txt'.format(lemmas[0]), 'w') as f:
     
         with wiki_ix.searcher() as ws:
             results = ws.search(my_query, limit=5)
             
             for result in results:
+                # print(result['path'])
                 soup = BeautifulSoup(open(result['path']), 'xml')
                 result_set = soup.find_all('doc')
                 
                 for item in result_set:
-                    if len(item.string.strip()) > 0:
-                        content=item.string.strip()
-                        sentences = content.split('.')
+                    if len(item.string) > 0:
+                        content = item.string
+                        sentences = sent_tokenize(content)
                         for sent in sentences:
+                            # print(sent)
                             for lemma in lemmas:
-                                if lemma in sent:
-                                    f.write(sent)
+                                if re.search(rf'\b{lemma}\b', sent, re.IGNORECASE):
+                                    f.write(sent + '\n')
+    # end = time.perf_counter()
+    # print('Time to search and write:{:.2f}'.format(end-start))                               
+    return lemmas[0]+'_all.txt'

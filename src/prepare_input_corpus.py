@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import os
-
+import chardet
 from whoosh.filedb.filestore import FileStorage
 from whoosh.fields import *
 
@@ -45,7 +45,7 @@ def create_index():
     wiki_storage = FileStorage('../data/wiki_index')
     wiki_ix = wiki_storage.create_index(wiki_schema, indexname='wiki')
     
-    ix_writer = wiki_ix.writer(limitmb=256, procs=4, multisegment=True)
+    ix_writer = wiki_ix.writer(limitmb=512, procs=8, multisegment=True)
      
     # index documents
     for root, dirs, files in os.walk('../data/wiki_dump'):
@@ -54,12 +54,11 @@ def create_index():
             all_text = soup.find_all('doc')
             file_content = ' '
             for item in all_text:
-                file_content = file_content + item.string
-                
+                file_content = file_content + item.string + '\n'
+            
             ix_writer.add_document(title=name, path=os.path.join(root,name), content=file_content)
                     
-    ix_writer.commit()
-                  
+    ix_writer.commit(merge=False)
 
 def main():
     
