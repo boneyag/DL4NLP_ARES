@@ -27,7 +27,7 @@ def prepare_data_bert(data, tokenizer):
     return padded, attention_mask
 
 def read_data(file_name):
-    df = pd.read_csv('../data/clusters/{}'.format(file_name), delimiter='\t', header=None)
+    df = pd.read_csv('../data/temp/{}'.format(file_name), delimiter='\t', header=None)
     return df
 
 def get_features(padded, attention_mask, model):
@@ -67,3 +67,6 @@ def get_features(padded, attention_mask, model):
     
     # print(features.shape)
     return features
+
+def get_sense_embedding(features):
+    return torch.mean(features, dim=0)

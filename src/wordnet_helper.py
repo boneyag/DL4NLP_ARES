@@ -9,7 +9,7 @@ def assign_cluster_wordnet_sense(file_name, input_lemma):
     
     similar_senses = {}
     
-    with open('../data/clusters/{}'.format(file_name)) as f:
+    with open('../data/temp/{}'.format(file_name)) as f:
         lines = f.readlines()
         for line in lines:
             if line.split()[0] == '!!':
@@ -21,14 +21,24 @@ def assign_cluster_wordnet_sense(file_name, input_lemma):
                 offset = int(offset_pos[0])
                 pos = offset_pos[1]
                 lemma = line_content[4]
-                # print('{}-{}'.format(offset, pos))
+                
                 if lemma == input_lemma:
-                    # print('{}-{}'.format(offset, pos))
-                    # print(wn.synset_from_pos_and_offset(pos, offset).definition())
-                    synset = wn.synset_from_pos_and_offset(pos, offset)
                     if wordnet_synset_offset in similar_senses.keys():
                         similar_senses[wordnet_synset_offset].extend(line_content[0].split('_')[1])
                     else:
                         similar_senses[wordnet_synset_offset] = [line_content[0].split('_')[1]]
 
-    return similar_senses                 
+    return similar_senses
+
+def offsetpos_to_lexid(offset_pos):
+    
+    synset = wn.synset_from_pos_and_offset(offset_pos[-1], int(offset_pos[:-2])) 
+    return synset.lemmas()[0].key()
+
+def offsetpos_to_name_gloss(offset_pos):
+    synset = wn.synset_from_pos_and_offset(offset_pos[-1], int(offset_pos[:-2])) 
+    
+    name_def = synset.lemmas()[0].name() +' '+ synset.definition()
+    
+    return name_def
+    

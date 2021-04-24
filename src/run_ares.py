@@ -1,11 +1,13 @@
 from subprocess import run
 from nltk.corpus import wordnet as wn
+import subprocess
 
-from wiki_search import search_wiki_dump
+from wiki_search import search_wiki_dump, window_search_wiki_dump
 from bert_helper import *
 from cluster import *
 from ukb_helper import prepare_data_ukb, run_ukb
-from wordnet_helper import assign_cluster_wordnet_sense
+from wordnet_helper import *
+from syntagnet_senses import get_collocated_senses
 import time
 
 def main():
@@ -19,7 +21,7 @@ def main():
     
     processed_synsets = []
     i = 1
-    for ss in wn.all_synsets():
+    for ss in wn.synsets('glass'):
         
         # start time
         st_time = time.perf_counter()
@@ -40,7 +42,7 @@ def main():
         instance = {'gloss': gloss,
                     'lex': lex}
         
-        
+        print('Search wiki')
         sent_file_name = search_wiki_dump(instance['lex'],)
         
         df_sentences = read_data(sent_file_name)
@@ -50,20 +52,59 @@ def main():
         
         print("get clusters")
         labels = get_kmeans_clusters(features, k)
-        print(labels)
+        # print(labels)
         df_sentences = df_sentences.assign(c=pd.Series(labels).values)
         
         print("write clusters")
-        df_sentences.to_csv('../data/clusters/{}_clusters.csv'.format(instance['lex'][0]), index=False, header=False)
+        df_sentences.to_csv('../data/clusters/clusters.csv', index=False, header=False)
         
         print('Run UKB')
-        prepare_data_ukb('{}_clusters.csv'.format(instance['lex'][0]))
+        prepare_data_ukb()
         run_ukb('temp_ukb_input.txt', 'temp_ukb_output.txt', 'ppr_w2w')
         
         similar_senses = assign_cluster_wordnet_sense('temp_ukb_output.txt', instance['lex'][0])
             
-        merge_clusters(instance['lex'][0], similar_senses)
+        print('Get collocated senses and containing sentences')
         
+        sense_context_sentences = {}
+        # for each sense_offset find collocated senses in syntagnet
+        for k, v in similar_senses.items():
+            collocated_sentences = []
+            collocated_senses = get_collocated_senses(k)
+            for sense in collocated_senses:
+                context_sent_file_name = window_search_wiki_dump(instance['lex'][0], sense[2])
+            
+            print('Done searching for collocation sentences')    
+            with open('../data/temp/sent_cluster.txt', 'w') as fw, open('../data/clusters/{}'.format(context_sent_file_name), 'r') as fr:
+                lines = fr.readlines()
+                for line in lines:
+                    fw.write(line)
+                # add lemma and gloss
+                fw.write(offsetpos_to_name_gloss(k) + '\n')
+
+                # add sentences in the same clusters
+                temp_sent_df = df_sentences[df_sentences.c.isin(v)]
+                for sent in temp_sent_df[0].tolist():
+                    fw.write(sent + '\n')
+            
+            # get BERT vectors for sense embeddings
+            
+            cluster_df = read_data('sent_cluster.txt')
+        
+            padded, attention_mask = prepare_data_bert(cluster_df[0], tokenizer)
+            features = get_features(padded, attention_mask, model)    
+            lex_id = offsetpos_to_lexid(k)
+            sense_embeddings = get_sense_embedding(features)
+            with open('../data/embeddings/{}.txt'.format(k), 'w') as f:
+                f.write('%s \n' % lex_id)
+                for entry in sense_embeddings:
+                    f.write('%d ' % entry)
+        
+            # remove older context sent file
+            command = 'rm -f ../data/clusters/context_all.txt'
+            subprocess.run(command, shell=True)
+
+        # add processed senses to a list
         processed_synsets.append(ss.name())    
         
         # end time
