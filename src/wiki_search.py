@@ -2,6 +2,7 @@ from whoosh.filedb.filestore import FileStorage
 from whoosh.qparser import QueryParser
 from bs4 import BeautifulSoup
 import re
+import os
 from nltk.tokenize import sent_tokenize
 
 
@@ -73,7 +74,12 @@ def window_search_wiki_dump(input1, input2):
     with wiki_ix.searcher() as ws:
         results = ws.search(my_query, limit=3)
         
-        with open('../data/clusters/context_all.txt', 'a') as f:
+        if os.path.exists('../data/temp/collocated_sents.txt'):
+            append_write = 'a'
+        else:
+            append_write = 'w'
+            
+        with open('../data/temp/collocated_sents.txt', append_write) as f:
             for result in results:
                 # print(result['path'])
                 soup = BeautifulSoup(open(result['path']), 'xml')
@@ -87,5 +93,6 @@ def window_search_wiki_dump(input1, input2):
                             if re.search(rf'\b{input1}\W+(?:\w+\W+){{0,1}}?{input2}\b', sent) or re.search(rf'\b{input2}\W+(?:\w+\W+){{0,1}}?{input1}\b', sent):
                                 f.write(sent + '\n')
     # end = time.perf_counter()
-    # print('Time to search and write:{:.2f}'.format(end-start))                               
-    return 'context_all.txt'
+    # print('Time to search and write:{:.2f}'.format(end-start))   
+                   
+    return 'collocated_sents.txt'

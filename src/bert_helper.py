@@ -54,9 +54,9 @@ def get_features(padded, attention_mask, model):
     token_embeddings = torch.sum(token_embeddings, dim=2)        
     # print(token_embeddings.size())
     
-    (_s, _t, _f) = token_embeddings.size()
+    # (_s, _t, _f) = token_embeddings.size()
 
-    features = token_embeddings.reshape(_s, (_t*_f))
+    # features = token_embeddings.reshape(_s, (_t*_f))
     
     # combine token-hidden layer vectors for each sentece  
     #
@@ -64,6 +64,7 @@ def get_features(padded, attention_mask, model):
     # print('{},{},{}'.format(_sent, _tok, _feat))
     # features = last_hidden_states[0].numpy().reshape(_sent, (_tok * _feat))
     
+    features = torch.mean(token_embeddings, dim=1)
     
     # print(features.shape)
     return features
