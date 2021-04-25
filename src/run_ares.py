@@ -2,6 +2,8 @@ from subprocess import run
 from nltk.corpus import wordnet as wn
 import subprocess
 import os
+import string
+import csv
 
 from wiki_search import search_wiki_dump, window_search_wiki_dump
 from bert_helper import *
@@ -16,6 +18,10 @@ def read_input_lemmas():
         lines = f.readlines()
         
     return lines
+    
+def get_word_position_in_sent(sent, lemma):
+    words = sent.split(' ')
+    return words.index(lemma)
     
 def main():
     """
@@ -58,21 +64,40 @@ def main():
             print('Search wiki')
             sent_file_name = search_wiki_dump(instance['lex'],)
             
+            # if no sentences were found go to the next lemmas
             if os.stat('../data/temp/{}'.format(sent_file_name)).st_size == 0:
                 continue
             
-            df_sentences = read_data(sent_file_name)
-            padded, attention_mask = prepare_data_bert(df_sentences[0], tokenizer)
-            print("get bert vectors")
-            features = get_features(padded, attention_mask, model)
+            token_vectors = []
+            sent_list = []
+            print('Get bert vectors')
+            with open('../data/temp/{}'.format(sent_file_name), 'r'):
+                lines = f.readlines()
+                
+                for line in lines:
+                    line = line.strip()
+                    line = line.translate(str.maketrans('', '', string.punctuation))
+                    sent_list.append(line)
+                    word_pos = get_word_position_in_sent(line)
+                    
+                    tokenized, seg_ids = prepare_data(line, tokenizer)
+                    token_vectors.append(get_feeaturs(tokenized, seg_ids, model, word_pos).detach().cpu().numpy())
+            
             
             print("get clusters")
-            labels = get_kmeans_clusters(features, k)
+            labels = get_kmeans_clusters(token_vectors, k)
             # print(labels)
-            df_sentences = df_sentences.assign(c=pd.Series(labels).values)
             
             print("write clusters")
-            df_sentences.to_csv('../data/clusters/clusters.csv', index=False, header=False)
+            with open('../data/clusters/clusters.csv', 'w') as cf, open('../data/temp/{}'.format(sent_file_name), 'r') as f:
+                cl_writer = csv.writer(cf, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                
+                lines = f.readlines()
+                
+                for line in lines:
+                    cl_writer.writerow()
+                
+                
             
             print('Run UKB')
             prepare_data_ukb()

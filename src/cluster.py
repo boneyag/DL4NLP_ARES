@@ -1,7 +1,7 @@
 from sklearn.cluster import KMeans
 
 def get_kmeans_clusters(features, k):
-    kmeans = KMeans(init='random', n_clusters=k, n_init=features.shape[0], max_iter=300, random_state=42)
+    kmeans = KMeans(init='random', n_clusters=k, n_init=len(features), max_iter=300, random_state=42)
     kmeans.fit(features)
     
     # print(kmeans.labels_[:])
