@@ -32,3 +32,11 @@ def get_feeaturs(tokenized, segment_ids, model, pos):
         sum_vec = torch.sum(token_embeddings[pos][-4:], dim=0)
         
         return sum_vec
+
+def get_sense_embedding(token_vectors):
+    # transform the list to a 2d array
+    array = np.array(token_vectors)
+    
+    mean_array = np.mean(array, axis=0)
+    
+    return mean_array

@@ -21,7 +21,10 @@ def read_input_lemmas():
     
 def get_word_position_in_sent(sent, lemma):
     words = sent.split(' ')
-    return words.index(lemma)
+    if lemma in words:
+        return words.index(lemma)
+    else:
+        return -1
     
 def main():
     """
@@ -38,7 +41,7 @@ def main():
     processed_synsets = []
     
     for lemma in input_lemmas:
-        print('\nCreating embedding for {}\n********************\n'.format(lemma))
+        print('\nCreating embedding for {}\n'.format(lemma))
         # i = 1
         for ss in wn.synsets(lemma.strip()):
             
@@ -53,7 +56,7 @@ def main():
             temp = ss.name().split('.')[0]
             
             # set number of clusters to number of synset/senses of temp
-            k = len([s for s in wn.synsets(temp)])
+            num_clusters = len([s for s in wn.synsets(temp)])
                     
                 
             gloss = ss.definition()
@@ -71,34 +74,31 @@ def main():
             token_vectors = []
             sent_list = []
             print('Get bert vectors')
-            with open('../data/temp/{}'.format(sent_file_name), 'r'):
+            
+            with open('../data/temp/{}'.format(sent_file_name), 'r') as f:
                 lines = f.readlines()
                 
                 for line in lines:
                     line = line.strip()
                     line = line.translate(str.maketrans('', '', string.punctuation))
-                    sent_list.append(line)
-                    word_pos = get_word_position_in_sent(line)
                     
-                    tokenized, seg_ids = prepare_data(line, tokenizer)
-                    token_vectors.append(get_feeaturs(tokenized, seg_ids, model, word_pos).detach().cpu().numpy())
+                    word_pos = get_word_position_in_sent(line, instance['lex'][0])
+                    
+                    if word_pos > -1:
+                        sent_list.append(line)
+                    
+                        tokenized, seg_ids = prepare_data(line, tokenizer)
+                        token_vectors.append(get_feeaturs(tokenized, seg_ids, model, word_pos).detach().cpu().numpy())
             
             
             print("get clusters")
-            labels = get_kmeans_clusters(token_vectors, k)
-            # print(labels)
+            labels = get_kmeans_clusters(token_vectors, num_clusters)
             
             print("write clusters")
-            with open('../data/clusters/clusters.csv', 'w') as cf, open('../data/temp/{}'.format(sent_file_name), 'r') as f:
+            with open('../data/clusters/clusters.csv', 'w') as cf:
                 cl_writer = csv.writer(cf, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                
-                lines = f.readlines()
-                
-                for line in lines:
-                    cl_writer.writerow()
-                
-                
-            
+                cl_writer.writerows(zip(sent_list, labels))
+
             print('Run UKB')
             prepare_data_ukb()
             run_ukb('temp_ukb_input.txt', 'temp_ukb_output.txt', 'ppr_w2w')
@@ -120,14 +120,17 @@ def main():
                     with open('../data/temp/sent_cluster.txt', 'w') as fw, open('../data/temp/collocated_sents.txt', 'r') as fr:
                         lines = fr.readlines()
                         for line in lines:
-                            fw.write(line)
+                            fw.write(line+'\n')
                         # add lemma and gloss
                         fw.write(offsetpos_to_name_gloss(k) + '\n')
 
                         # add sentences in the same clusters
-                        temp_sent_df = df_sentences[df_sentences.c.isin(v)]
-                        for sent in temp_sent_df[0].tolist():
-                            fw.write(sent + '\n')
+                        with open('../data/clusters/clusters.csv', 'r') as cf:
+                            cf_reader = csv.reader(cf)
+                            
+                            for row in cf_reader:
+                                if row[1] in v:
+                                    fw.write(row[0]+'\n')
                 else:
                     print('No collocated senses')
                     with open('../data/temp/sent_cluster.txt', 'w') as fw:
@@ -135,19 +138,35 @@ def main():
                         fw.write(offsetpos_to_name_gloss(k) + '\n')
 
                         # add sentences in the same clusters
-                        temp_sent_df = df_sentences[df_sentences.c.isin(v)]
-                        for sent in temp_sent_df[0].tolist():
-                            fw.write(sent + '\n')
+                        with open('../data/clusters/clusters.csv', 'r') as cf:
+                            cf_reader = csv.reader(cf)
+                            
+                            for row in cf_reader:
+                                if row[1] in v:
+                                    fw.write(row[0]+'\n')
                     
                 
                 # get BERT vectors for sense embeddings
-                
-                cluster_df = read_data('sent_cluster.txt')
             
-                padded, attention_mask = prepare_data_bert(cluster_df[0], tokenizer)
-                features = get_features(padded, attention_mask, model)    
+                token_vectors = []
+                print('Get bert vectors')
+                with open('../data/temp/sent_cluster.txt', 'r') as f:
+                    lines = f.readlines()
+                    
+                    for line in lines:
+                        line = line.strip()
+                        line = line.translate(str.maketrans('', '', string.punctuation))
+                        
+                        word_pos = get_word_position_in_sent(line, instance['lex'][0])
+                        
+                        if word_pos > -1:
+                            sent_list.append(line)
+                        
+                            tokenized, seg_ids = prepare_data(line, tokenizer)
+                            token_vectors.append(get_feeaturs(tokenized, seg_ids, model, word_pos).detach().cpu().numpy())    
+                        
                 lex_id = offsetpos_to_lexid(k)
-                sense_embeddings = get_sense_embedding(features)
+                sense_embeddings = get_sense_embedding(token_vectors)
                 print(sense_embeddings.shape)
                 with open('../data/embeddings/{}.txt'.format(k), 'w') as f:
                     f.write('%s \n' % lex_id)
