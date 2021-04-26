@@ -90,6 +90,8 @@ def main():
                         tokenized, seg_ids = prepare_data(line, tokenizer)
                         token_vectors.append(get_feeaturs(tokenized, seg_ids, model, word_pos).detach().cpu().numpy())
             
+            if len(token_vectors) < 1:
+                break
             
             print("get clusters")
             labels = get_kmeans_clusters(token_vectors, num_clusters)
@@ -184,6 +186,7 @@ def main():
             end_time = time.perf_counter()
             print('Time to process one sense: {}'.format(end_time-st_time))
             
+            break
             # For testing purposes. Don't want to run the entire WN synset.
             # i += 1
             # if i > 1:
