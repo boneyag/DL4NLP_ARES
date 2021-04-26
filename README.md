@@ -1,6 +1,12 @@
 # DL4NLP_ARES
 Replicate ARES (WSD model) [1]
 
+To use this code first clone the repository to a desired location.
+`git clone https://github.com/boneyag/DL4NLP_ARES.git` 
+
+Once the repository is cloned to the local machine create following directories in the data directory:
+`clusters`, `embeddings`, `temp`, `wiki_dump`, and `wiki_index`.
+
 ### Directory structre
 
 `data` contains sample input corpus, input file generated according to UKB accepted format, and UKB results files.
@@ -11,7 +17,9 @@ Replicate ARES (WSD model) [1]
 1. Download a Wikipedia data dump (the authors used the 2019 July data dump). Data dumps are huge compressed files (~18GB). Therefore, downloading through [torrents](https://meta.wikimedia.org/wiki/Data_dump_torrents#English_Wikipedia) is a good option.
 2. Use the command `bzip2 -dk <filename>.xml.bz2` to extract the XML file. Don't try to open this file as it's nearly ~75GB.
 3. Use the [wikiextractor](https://github.com/attardi/wikiextractor) extract articles to readable size files. 
-    3.1. I preferred to execute the script instead of installing the wikiextractor. Use the input parameter to specify the location of the XML file and the output parameter to specify the location for output files. It should take several minutes to complete the task. Once completed, there should be a set of directories like AA, AB, ..., and in each dir, there should be files like wiki_00, wiki_01.
+    3.1. I preferred to execute the script instead of installing the wikiextractor. Use the input parameter to specify the location of the XML file and the output parameter to specify the location for output files. It should take several minutes to complete the task. Once completed, there should be a set of directories like AA, AB, ..., and in each dir, there should be files like wiki_00, wiki_01. Use following parameter settings to make the files small as possible (200Kb) and use 8 worker threads. Make sure to replace `<?>` accordingly.
+    `python -m <path to>/wikiextractor.WikiExtractor -o <output location> -b 200K --no-template --processes <8> <Wikipedia dump file>`
+
     3.2. Each file contain several documents in the format of
     ```
     <doc id="..." ulr="..." title="...">
@@ -19,29 +27,12 @@ Replicate ARES (WSD model) [1]
     </doc>
     ```
     Since there are no root level tags that enclose all <doc> tags, it is not possible to read the entire file using an XML reader in python. Therefore, we use the `add_root_tag` function to modify all files by adding the <articles> tags to each file.
+
 4. Since there are over 144000 files, searching for sentences takes nearly 980s. Therefore, we use [Whoosh](https://whoosh.readthedocs.io/en/latest/quickstart.html) to index documents which speed up the search to 6.3s. Run the `prepare_input_corpus.py` script to modify the files and create an index. (We decided not to upload the index as the file size is too large). Before running the script, modify the input_path in `add_root_tag` function. Also, create a dir `data/wiki_dump` to have a valid out_put path.
 
-### Clustering sentences
-Change the directory to `src` and run `python3 bert_wsd.py` to create two clusters. To run this script you need to have `numpy`, `pandas`, `torch`, `transformers`, and `sklearn` packages installed in your virtual environment. You need Python 3+ as well. The script expect `sample_sentences.txt` in data directory. This can be changed to actual corpus when running the full replication in future. If the execution is successful, there will be `sample_sentences_clusters_glass.csv` in the data directory. 
+### Runnig ARES
+Run `src/run_ares.py` to generate embedding for a list of lemmas in `input_lemmas.txt` in data directory. This will take a lot of time to complete. If you planning to test for a few lemmas replace the input_lemmas file content with less number of words. Current file contain over 1000 entries. 
 
-### Running UKB on each cluster to apply sense embedding
-Run `python3 run_ukb.py` to create bag of words for each cluster. Then the script tranform raw words to UKB acceptable input format (an example is provided below). If successful there will be a `glass_ukb_input2.txt` in the data directory. 
-
-```
-ctx_01
-man#n#w1#1 kill#v#w2#1 cat#n#w3#1 hammer#n#w4#1
-```
-To run UKB on the input file, run the follwoing command.
-`./ukb/src/ukb_wsd --ppr_w2w -K ukb/scripts/wn30g.bin -D ukb/scripts/wn30_dict.txt ../data/glass_ukb_input2.txt > ../data/glass_ukb_output2w2.txt`
-
-If successful, the script will create `glass_ukb_output2w2w.txt` file. The output file contain the WordNet sense offset and lemma (an example is provided).
-```
-ctx_1 w15  03438257-n !! glass
-ctx_2 w19  14881303-n !! glass
-```
-
-### Find the sense and description from WordNet
-Run `python3 wsd_wordnet.py` to find the sense and sense description from the sense offset. 
 
 
 ***
