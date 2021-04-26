@@ -1,61 +1,196 @@
-# DL4NLP_ARES
-Replicate ARES (WSD model) [1]
+# WikiExtractor
+[WikiExtractor.py](http://medialab.di.unipi.it/wiki/Wikipedia_Extractor) is a Python script that extracts and cleans text from a [Wikipedia database dump](https://dumps.wikimedia.org/).
 
-To use this code first clone the repository to a desired location.
-`git clone https://github.com/boneyag/DL4NLP_ARES.git` 
+The tool is written in Python and requires Python 3 but no additional library.
+**Warning**: problems have been reported on Windows due to poor support for `StringIO` in the Python implementation on Windows.
 
-Once the repository is cloned to the local machine create following directories in the data directory:
-`clusters`, `embeddings`, `temp`, `wiki_dump`, and `wiki_index`.
+For further information, see the [Wiki](https://github.com/attardi/wikiextractor/wiki).
 
-### Install requirements 
-Use the requirements file to install the dependencies.
-`pip3 install -r requirements.txt`
+# Wikipedia Cirrus Extractor
 
-### Directory structre
+`cirrus-extractor.py` is a version of the script that performs extraction from a Wikipedia Cirrus dump.
+Cirrus dumps contain text with already expanded templates.
 
-`data` contains sample input corpus, input file generated according to UKB accepted format, and UKB results files.
-`src` contains four scripts that are required to run the experiments. 
-`src/ukb` contains scripts required to run UKB. The tool is compiled and ready to run. You should compile the UKB before executing the scripts. Follow the steps in [here](https://github.com/asoroa/ukb/tree/master/src) to compile your own UKB tool. 
+Cirrus dumps are available at:
+[cirrussearch](http://dumps.wikimedia.org/other/cirrussearch/).
 
-### Setup Wikipedia dump as the input corpus
-1. Download a Wikipedia data dump (the authors used the 2019 July data dump). Data dumps are huge compressed files (~18GB). Therefore, downloading through [torrents](https://meta.wikimedia.org/wiki/Data_dump_torrents#English_Wikipedia) is a good option.
-2. Use the command `bzip2 -dk <filename>.xml.bz2` to extract the XML file. Don't try to open this file as it's nearly ~75GB.
-3. Use the [wikiextractor](https://github.com/attardi/wikiextractor) extract articles to readable size files. 
-    3.1. I preferred to execute the script instead of installing the wikiextractor. Use the input parameter to specify the location of the XML file and the output parameter to specify the location for output files. It should take several minutes to complete the task. Once completed, there should be a set of directories like AA, AB, ..., and in each dir, there should be files like wiki_00, wiki_01. Use following parameter settings to make the files small as possible (200Kb) and use 8 worker threads. Make sure to replace `<?>` accordingly.
-    `python -m <path to>/wikiextractor.WikiExtractor -o <output location> -b 200K --no-template --processes <8> <Wikipedia dump file>`
+# Details
 
-    3.2. Each file contain several documents in the format of
-    ```
-    <doc id="..." ulr="..." title="...">
-     ...
-    </doc>
-    ```
-    Since there are no root level tags that enclose all <doc> tags, it is not possible to read the entire file using an XML reader in python. Therefore, we use the `add_root_tag` function to modify all files by adding the <articles> tags to each file.
+WikiExtractor performs template expansion by preprocessing the whole dump and extracting template definitions.
 
-4. Since there are over 144000 files, searching for sentences takes nearly 980s. Therefore, we use [Whoosh](https://whoosh.readthedocs.io/en/latest/quickstart.html) to index documents which speed up the search to 6.3s. Run the `prepare_input_corpus.py` script to modify the files and create an index. (We decided not to upload the index as the file size is too large). Before running the script, modify the input_path in `add_root_tag` function. Also, create a dir `data/wiki_dump` to have a valid out_put path.
+In order to speed up processing:
 
-### Runnig ARES
-Run `src/run_ares.py` to generate embedding for a list of lemmas in `input_lemmas.txt` in data directory. This will take a lot of time to complete. If you planning to test for a few lemmas replace the input_lemmas file content with less number of words. Current file contain over 1000 entries. 
+- multiprocessing is used for dealing with articles in parallel
+- a cache is kept of parsed templates (only useful for repeated extractions).
 
+## Installation
 
+The script may be invoked directly:
 
-***
-### Repository contributors and branch naming conventions
+    python -m wikiextractor.WikiExtractor <Wikipedia dump file>
 
-Individual branches contain different models that we tried out before merging them towards the main brach.
+It can also be installed from `PyPi` by doing:
 
-Final outcome should be the ARES word sense disambiguation (WSD) model as originally presented in the reference paper [1].
+    pip install wikiextractor
 
-Branch naming convension: 
-`<author>-<tool>-<tag>`, for example, `ag-BERT-trial` means Akalanka's branch on using/configuring BERT for a trial run.
+or locally with:
 
-Merging policy:
-Both contributor will agree before a branch merge to a production ready branch (usually `main`).
+    (sudo) python setup.py install
 
-Contributors:
-Akalanka Galappaththi and Sakib Hasan
+The installer also installs two scripts for direct invocation:
 
-* * *
+    wikiextractor  	(equivalent to python -m wikiextractor.WikiExtractor)
+    extractPage		(to extract a single page from a dump)
 
-## References
-[1](https://www.aclweb.org/anthology/2020.emnlp-main.285.pdf) Bianca Scarlini, Tommaso Pasini, and Roberto Navigli. 2020. With more contexts come better performance: Contextualized sense embedding for all round word sense disambiguation. In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing, ENNLP 2020, On-line, November 16-20, 2020, pages 3528-3539. Association for Computational Linguistics.
+## Usage
+
+### Wikiextractor
+The script is invoked with a Wikipedia dump file as an argument:
+
+    python -m wikiextractor.WikiExtractor <Wikipedia dump file> [--templates <extracted template file>]
+
+The option `--templates` extracts the templates to a local file, which can be reloaded to reduce the time to perform extraction.
+
+The output is stored in several files of similar size in a given directory.
+Each file will contains several documents in this [document format](https://github.com/attardi/wikiextractor/wiki/File-Format).
+
+```
+usage: wikiextractor [-h] [-o OUTPUT] [-b n[KMG]] [-c] [--json] [--html] [-l] [-ns ns1,ns2]
+			 [--templates TEMPLATES] [--no-templates] [--html-safe HTML_SAFE] [--processes PROCESSES]
+			 [-q] [--debug] [-a] [-v]
+			 input
+
+Wikipedia Extractor:
+Extracts and cleans text from a Wikipedia database dump and stores output in a
+number of files of similar size in a given directory.
+Each file will contain several documents in the format:
+
+	<doc id="" url="" title="">
+	    ...
+	    </doc>
+
+If the program is invoked with the --json flag, then each file will                                            
+contain several documents formatted as json ojects, one per line, with                                         
+the following structure
+
+	{"id": "", "revid": "", "url": "", "title": "", "text": "..."}
+
+The program performs template expansion by preprocesssng the whole dump and
+collecting template definitions.
+
+positional arguments:
+  input                 XML wiki dump file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --processes PROCESSES
+			    Number of processes to use (default 79)
+
+Output:
+  -o OUTPUT, --output OUTPUT
+			    directory for extracted files (or '-' for dumping to stdout)
+  -b n[KMG], --bytes n[KMG]
+			    maximum bytes per output file (default 1M)
+  -c, --compress        compress output files using bzip
+  --json                write output in json format instead of the default <doc> format
+
+Processing:
+  --html                produce HTML output, subsumes --links
+  -l, --links           preserve links
+  -ns ns1,ns2, --namespaces ns1,ns2
+			    accepted namespaces
+  --templates TEMPLATES
+			    use or create file containing templates
+  --no-templates        Do not expand templates
+  --html-safe HTML_SAFE
+			    use to produce HTML safe output within <doc>...</doc>
+
+Special:
+  -q, --quiet           suppress reporting progress info
+  --debug               print debug info
+  -a, --article         analyze a file containing a single article (debug option)
+  -v, --version         print program version
+```
+
+Saving templates to a file will speed up performing extraction the next time,
+assuming template definitions have not changed.
+
+Option `--no-templates` significantly speeds up the extractor, avoiding the cost
+of expanding [MediaWiki templates](https://www.mediawiki.org/wiki/Help:Templates).
+
+For further information, visit [the documentation](http://attardi.github.io/wikiextractor).
+
+### Cirrus Extractor
+
+~~~
+usage: cirrus-extract.py [-h] [-o OUTPUT] [-b n[KMG]] [-c] [-ns ns1,ns2] [-q]
+                         [-v]
+                         input
+
+Wikipedia Cirrus Extractor:
+Extracts and cleans text from a Wikipedia Cirrus dump and stores output in a
+number of files of similar size in a given directory.
+Each file will contain several documents in the format:
+
+	<doc id="" url="" title="" language="" revision="">
+        ...
+        </doc>
+
+positional arguments:
+  input                 Cirrus Json wiki dump file
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+Output:
+  -o OUTPUT, --output OUTPUT
+                        directory for extracted files (or '-' for dumping to
+                        stdin)
+  -b n[KMG], --bytes n[KMG]
+                        maximum bytes per output file (default 1M)
+  -c, --compress        compress output files using bzip
+
+Processing:
+  -ns ns1,ns2, --namespaces ns1,ns2
+                        accepted namespaces
+
+Special:
+  -q, --quiet           suppress reporting progress info
+  -v, --version         print program version
+~~~
+
+### extractPage
+Extract a single page from a Wikipedia dump file.
+
+~~~
+usage: extractPage [-h] [--id ID] [--template] [-v] input
+
+Wikipedia Page Extractor:
+Extracts a single page from a Wikipedia dump file.
+
+positional arguments:
+  input          XML wiki dump file
+
+optional arguments:
+  -h, --help     show this help message and exit
+  --id ID        article number
+  --template     template number
+  -v, --version  print program version
+~~~
+
+## License
+The code is made available under the [GNU Affero General Public License v3.0](LICENSE). 
+
+## Reference
+If you find this code useful, please refer it in publications as:
+
+~~~
+@misc{Wikiextractor2015,
+  author = {Giusepppe Attardi},
+  title = {WikiExtractor},
+  year = {2015},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/attardi/wikiextractor}}
+}
+~~~
