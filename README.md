@@ -7,6 +7,10 @@ To use this code first clone the repository to a desired location.
 Once the repository is cloned to the local machine create following directories in the data directory:
 `clusters`, `embeddings`, `temp`, `wiki_dump`, and `wiki_index`.
 
+### Install requirements 
+Use the requirements file to install the dependencies.
+`pip3 install -r requirements.txt`
+
 ### Directory structre
 
 `data` contains sample input corpus, input file generated according to UKB accepted format, and UKB results files.
