@@ -49,8 +49,7 @@ Merging policy:
 Both contributor will agree before a branch merge to a production ready branch (usually `main`).
 
 Contributors:
-Akalanka Galappaththi
-Sakib Hasan
+Akalanka Galappaththi and Sakib Hasan
 
 * * *
 
