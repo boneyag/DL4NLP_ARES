@@ -173,7 +173,7 @@ def main():
                 with open('../data/embeddings/{}.txt'.format(k), 'w') as f:
                     f.write('%s \n' % lex_id)
                     for entry in sense_embeddings:
-                        f.write('%d ' % entry)
+                        f.write('%f ' % entry)
             
                 # remove older context sent file
                 command = 'rm -f ../data/temp/collocated_sents.txt'
