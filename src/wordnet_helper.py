@@ -41,4 +41,8 @@ def offsetpos_to_name_gloss(offset_pos):
     name_def = synset.lemmas()[0].name() +' '+ synset.definition()
     
     return name_def
+
+def offsetpos_to_synset(offset_pos):
+    synset = wn.synset_from_pos_and_offset(offset_pos[-1], int(offset_pos[:-2]))
+    return synset
     
