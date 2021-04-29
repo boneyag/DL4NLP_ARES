@@ -37,7 +37,10 @@ Use the requirements file to install the dependencies.
 ### Runnig ARES
 Run `src/run_ares.py` to generate embedding for a list of lemmas in `input_lemmas.txt` in data directory. This will take a lot of time to complete. If you planning to test for a few lemmas replace the input_lemmas file content with less number of words. Current file contain over 1000 entries. 
 
+### Running evaluation
+Run `src/evaluate_ares.py` to generate embeddings for target words in hard-corded sentence id from Senseval-2. The results will print on the terminal. The results contain the target lemma, Wordnet lexid of extracted senses, predicted sense lexid, and gold key lexid.
 
+*Currently the model is not performing well. Required further improvements to generate more senses.*
 
 ***
 ### Repository contributors and branch naming conventions
